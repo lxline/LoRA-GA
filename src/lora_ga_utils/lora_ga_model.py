@@ -11,7 +11,7 @@ def lora_ga_model_init(self, model, config, adapter_name):
     if hasattr(model, named_grad_key) and getattr(model, named_grad_key) is not None:
         self.named_grad = getattr(model, "named_grad")
 
-    LoraModel._init_origin(model, config, adapter_name)
+    self._init_origin(model, config, adapter_name)
     self.named_grad = None
 
 
@@ -25,7 +25,7 @@ def lora_ga_create_and_replace(
         current_key,
 ):
     if lora_config.init_lora_weights != "lora_ga" or self.named_grad is None:
-        LoraModel._create_and_replace_origin(
+        self._create_and_replace_origin(
             lora_config,
             adapter_name,
             target,
