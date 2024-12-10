@@ -42,4 +42,5 @@ class LoraGAConfig(LoraConfig):
     )
 
     def __post_init__(self):
-        super().__post_init__(init_lora_weights="pissa")
+        super().__post_init__()
+        self.init_lora_weights = "pissa"
