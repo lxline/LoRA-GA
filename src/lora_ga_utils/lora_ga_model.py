@@ -2,7 +2,7 @@ import re
 import torch
 from itertools import chain
 from peft.utils import get_quantization_config
-from peft.tuners.lora import LoraModel, LoraLayer
+from peft.tuners.lora import LoraLayer
 
 
 def lora_ga_model_init(self, model, config, adapter_name):
@@ -24,16 +24,6 @@ def lora_ga_create_and_replace(
         parent,
         current_key,
 ):
-    if lora_config.init_lora_weights != "lora_ga" or self.named_grad is None:
-        self._create_and_replace_origin(
-            lora_config,
-            adapter_name,
-            target,
-            target_name,
-            parent,
-            current_key,
-        )
-        return
     if current_key is None:
         raise ValueError("Current Key shouldn't be `None`")
     # Regexp matching - Find key which matches current target_name in patterns provided
@@ -54,7 +44,7 @@ def lora_ga_create_and_replace(
         "loaded_in_8bit": getattr(self.model, "is_loaded_in_8bit", False),
         "loaded_in_4bit": getattr(self.model, "is_loaded_in_4bit", False),
     }
-    if lora_config.init_lora_weights == "lora_ga" and self.named_grad is not None:
+    if self.named_grad is not None:
         kwargs.update({"peft_config": self.peft_config[adapter_name], "grad": self.named_grad[current_key]})
     quant_methods = ["gptq", "aqlm", "awq"]
     for quant_method in quant_methods:
@@ -82,7 +72,7 @@ def lora_ga_create_and_replace(
             new_module.requires_grad_(False)
         self._replace_module(parent, target_name, new_module, target)
 
-def lora_ga_init(self, adapter_name):
+def lora_ga_layer_init(self, adapter_name):
     def get_float_weight(model: torch.nn.Module):
         model: torch.nn.Linear
 

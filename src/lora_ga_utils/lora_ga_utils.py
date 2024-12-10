@@ -7,7 +7,7 @@ from tqdm import tqdm
 import torch.distributed as dist
 from peft import PeftModel
 import os
-from .lora_ga_model import (lora_ga_model_init, lora_ga_create_and_replace, lora_ga_init)
+from .lora_ga_model import (lora_ga_model_init, lora_ga_create_and_replace, lora_ga_layer_init)
 from peft.tuners.lora import LoraModel, LoraLayer
 
 def timer(data_format="ms"):
@@ -219,15 +219,21 @@ class LoraGAContext:
         setattr(self.model, "named_grad", self.named_grad)
         LoraModel._init_origin = LoraModel.__init__
         LoraModel.__init__ = lora_ga_model_init
+
         LoraModel._create_and_replace_origin = LoraModel._create_and_replace
         LoraModel._create_and_replace = lora_ga_create_and_replace
-        LoraLayer.lora_ga_init = lora_ga_init
+
+        LoraLayer.pissa_init_origin = LoraLayer.pissa_init
+        LoraLayer.pissa_init = lora_ga_layer_init
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if hasattr(self.model, "named_grad"):
             delattr(self.model, "named_grad")
+
         LoraModel.__init__ = LoraModel._init_origin
         LoraModel._create_and_replace = LoraModel._create_and_replace_origin
+        LoraLayer.pissa_init = LoraLayer.pissa_init_origin
+
         del LoraModel._init_origin
         del LoraModel._create_and_replace_origin
-        del LoraLayer.lora_ga_init
+        del LoraLayer.pissa_init_origin
