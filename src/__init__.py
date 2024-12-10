@@ -1,1 +1,1 @@
-from entrypoint import lora_ga_init
+from .entrypoint import lora_ga_init

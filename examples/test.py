@@ -1,20 +1,20 @@
 import torch
 from fire import Fire
 
-from data import DATASET_MAP
+from .data import DATASET_MAP
 import wandb
 import os
 from accelerate import Accelerator
 from peft import PeftModel, get_peft_model
 
-from utils import (
+from .utils import (
     transform_dataset,
     initialize_text_to_text_model,
     find_all_linear_modules,
     train_text_to_text_model,
 )
-from ..src.entrypoint import lora_ga_init
-from ..src.lora_ga_utils import (save_loraga_model_init, save_loraga_model_final, LoraGAConfig, LoraGAContext, estimate_gradient, find_all_linear_modules)
+from src.entrypoint import lora_ga_init
+from src.lora_ga_utils import (save_loraga_model_init, save_loraga_model_final, LoraGAConfig, LoraGAContext, estimate_gradient, find_all_linear_modules)
 
 
 def main(lora_alpha=8, lora_rank=32, sample_size=128, seed=31):

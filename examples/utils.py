@@ -11,7 +11,7 @@ from transformers import (
     EarlyStoppingCallback,
 )
 from datasets import Dataset
-from logTrainer import LogTrainer
+from .logTrainer import LogTrainer
 import logging
 
 
