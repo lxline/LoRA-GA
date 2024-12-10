@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 
-from modelscope.models.cv.face_reconstruction.models.pix2pix.networks import init_weights
 from peft.tuners.lora import LoraConfig
 
 @dataclass

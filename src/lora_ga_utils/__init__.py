@@ -14,7 +14,7 @@ from .lora_ga_utils import (
 )
 from .lora_ga_config import LoraGAConfig
 from .lora_ga_model import (
-    lora_ga_init,
+    lora_ga_model_init,
     lora_ga_create_and_replace,
-    lora_ga_init,
+    lora_ga_layer_init,
 )
