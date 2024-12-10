@@ -1,10 +1,12 @@
 import torch
 import typing as tp
 import pandas as pd
-from transformers import (
+from modelscope import (
     AutoTokenizer,
     AutoModelForCausalLM,
     AutoModelForSeq2SeqLM,
+)
+from transformers import (
     Seq2SeqTrainingArguments,
     EarlyStoppingCallback,
 )
