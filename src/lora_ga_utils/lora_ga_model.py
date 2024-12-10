@@ -72,7 +72,7 @@ def lora_ga_create_and_replace(
             new_module.requires_grad_(False)
         self._replace_module(parent, target_name, new_module, target)
 
-def lora_ga_layer_init(self, adapter_name):
+def lora_ga_layer_init(self, adapter_name, init_lora_weights):
     def get_float_weight(model: torch.nn.Module):
         model: torch.nn.Linear
 
