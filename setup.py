@@ -1,7 +1,8 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
 
-setup(name='lora_ga_init',
+setup(
+    name='lora_ga_init',
     version='0.1',
     package_dir={'': 'src'},
-    packages=[''],
-    )
+    packages=find_packages(where='src'),
+)
