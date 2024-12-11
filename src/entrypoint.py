@@ -11,7 +11,6 @@ def lora_ga_init(model,
          batch_size: int=2,
          num_iters: int=64,
          direction: str="ArB2r",
-         max_length: int=1024,
          dtype: str="fp32",
          scale: str="stable",
          stable_gamma: int=16):
@@ -19,7 +18,6 @@ def lora_ga_init(model,
         bsz=batch_size,
         iters=num_iters,
         direction=direction,
-        max_length=max_length,
         dtype=dtype,
         scale=scale,
         stable_gamma=stable_gamma,
@@ -49,7 +47,6 @@ def arg_parser():
     parser.add_argument("--batch_size", type=int, default=2, help="Batch size for data loader")
     parser.add_argument("--num_iters", type=int, default=64, help="Number of iterations for LoRA GA")
     parser.add_argument("--direction", type=str, default="ArB2r", help="Direction for gradient estimation")
-    parser.add_argument("--max_length", type=int, default=1024, help="Maximum length for input sequences")
     parser.add_argument("--dtype", type=str, default="fp32", choices=["fp32", "fp16"], help="Data type for computations")
     parser.add_argument("--scale", type=str, default="stable", choices=["stable", "unstable"], help="Scaling method")
     parser.add_argument("--stable_gamma", type=int, default=16, help="Gamma value for stable scaling")
@@ -64,7 +61,6 @@ if __name__ == "__main__":
                  batch_size=args.batch_size,
                  num_iters=args.num_iters,
                  direction=args.direction,
-                 max_length=args.max_length,
                  dtype=args.dtype,
                  scale=args.scale,
                  stable_gamma=args.stable_gamma)

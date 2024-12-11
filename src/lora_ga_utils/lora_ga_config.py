@@ -15,7 +15,6 @@ class LoraGAConfig(LoraConfig):
         bsz (int): The batch size for training. Default is 2.
         iters (int): The number of iterations for training. Default is 2.
         direction (str): The direction of gradient alignment. Default is "ArB2r".
-        max_length (int): The maximum sequence length for inputs. Default is 1024.
         dtype (str): The data type used for computations. Default is "fp32".
         scale (str): Scaling method for gradients. Default is "stable".
         stable_gamma (int): Gamma value used for stable scaling. Default is 16.
@@ -29,9 +28,6 @@ class LoraGAConfig(LoraConfig):
     )
     direction: str = field(
         default="ArB2r",
-    )
-    max_length: int = field(
-        default=1024,
     )
     dtype: str = field(
         default="fp32",
