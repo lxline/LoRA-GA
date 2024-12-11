@@ -1,11 +1,5 @@
 accelerate
-datasets
-fire
-modelscope
-pandas
 psutil
 regex
 transformers
-wandb
-flash-attn
 peft
