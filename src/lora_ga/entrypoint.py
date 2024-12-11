@@ -4,7 +4,7 @@ from peft import get_peft_model
 from torch.utils.data import DataLoader
 from accelerate import Accelerator
 
-from .lora_ga_utils import (estimate_gradient, LoraGAConfig, LoraGAContext, find_all_linear_modules)
+from src.lora_ga.lora_ga_utils import (estimate_gradient, LoraGAConfig, LoraGAContext, find_all_linear_modules)
 
 def lora_ga_init(model,
          dataset,
