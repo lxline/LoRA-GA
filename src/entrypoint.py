@@ -25,7 +25,8 @@ def lora_ga_init(model,
         stable_gamma=stable_gamma,
         target_modules=find_all_linear_modules(model=model),
     )
-    dataloader = DataLoader(dataset)
+    dataset = dataset[:batch_size * num_iters]
+    dataloader = DataLoader(dataset, batch_size=batch_size)
     accelerator = Accelerator()
     named_grad = estimate_gradient(
         model=model,
