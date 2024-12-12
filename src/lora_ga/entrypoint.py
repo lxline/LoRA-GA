@@ -105,7 +105,7 @@ class LoraGAContext:
         mapping.PEFT_TYPE_TO_CONFIG_MAPPING = mapping.PEFT_TYPE_TO_CONFIG_MAPPING_origin
         mapping.PEFT_TYPE_TO_TUNER_MAPPING = mapping.PEFT_TYPE_TO_TUNER_MAPPING_origin
 
-        LoraLayer.update_layer = LoraLayer.updata_layer_origin
+        LoraLayer.update_layer = LoraLayer.update_layer_origin
 
         del mapping.PEFT_TYPE_TO_CONFIG_MAPPING_origin
         del mapping.PEFT_TYPE_TO_TUNER_MAPPING_origin
