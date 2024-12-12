@@ -1,1 +1,1 @@
-from .entrypoint import lora_ga_init
+from .entrypoint import LoraGAContext, get_lora_ga_model

@@ -5,10 +5,10 @@ from accelerate import Accelerator
 import torch
 from tqdm import tqdm
 import torch.distributed as dist
-from peft import PeftModel
+
 import os
-from .lora_ga_model import (lora_ga_model_init, lora_ga_create_and_replace, lora_ga_layer_init)
-from peft.tuners.lora import LoraModel, LoraLayer
+
+from peft import PeftModel
 
 def timer(data_format="ms"):
     """
@@ -194,48 +194,3 @@ def find_all_linear_modules(model) -> List[str]:
         ):
             module_names.add(name.split(".")[-1])
     return list(module_names)
-
-
-class LoraGAContext:
-    """
-    Context manager for attaching and detaching a named gradient dictionary to a model.
-
-    This context manager allows you to temporarily attach a dictionary of named gradients
-    to the model as an attribute. Upon entering the context, the `named_grad` dictionary
-    is set as an attribute of the model. Upon exiting the context, the attribute is removed.
-
-    Attributes:
-        model (torch.nn.Module): The model to which the gradient dictionary will be attached.
-        named_grad (dict, optional): A dictionary where keys are parameter names and values are gradients. Defaults to None.
-    """
-
-    def __init__(
-        self,
-        model: torch.nn.Module,
-        named_grad: dict = None,
-    ) -> None:
-        self.model = model
-        self.named_grad = named_grad
-
-    def __enter__(self):
-        setattr(self.model, "named_grad", self.named_grad)
-        LoraModel._init_origin = LoraModel.__init__
-        LoraModel.__init__ = lora_ga_model_init
-
-        LoraModel._create_and_replace_origin = LoraModel._create_and_replace
-        LoraModel._create_and_replace = lora_ga_create_and_replace
-
-        LoraLayer.pissa_init_origin = LoraLayer.pissa_init
-        LoraLayer.pissa_init = lora_ga_layer_init
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if hasattr(self.model, "named_grad"):
-            delattr(self.model, "named_grad")
-
-        LoraModel.__init__ = LoraModel._init_origin
-        LoraModel._create_and_replace = LoraModel._create_and_replace_origin
-        LoraLayer.pissa_init = LoraLayer.pissa_init_origin
-
-        del LoraModel._init_origin
-        del LoraModel._create_and_replace_origin
-        del LoraLayer.pissa_init_origin

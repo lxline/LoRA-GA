@@ -1,22 +1,126 @@
 import argparse
-
-from peft import get_peft_model
+import torch
 from torch.utils.data import DataLoader
 from accelerate import Accelerator
 
-from .lora_ga_utils import (estimate_gradient, LoraGAConfig, LoraGAContext, find_all_linear_modules)
+from peft import get_peft_model
+from peft.config import PeftConfig
+from peft.tuners.lora import LoraLayer
+from peft.tuners import (
+    AdaLoraConfig, AdaLoraModel,
+    AdaptionPromptConfig,
+    BOFTConfig, BOFTModel,
+    FourierFTConfig, FourierFTModel,
+    HRAConfig, HRAModel,
+    IA3Config, IA3Model,
+    LNTuningConfig, LNTuningModel,
+    LoHaConfig, LoHaModel,
+    LoKrConfig, LoKrModel,
+    MultitaskPromptTuningConfig,
+    OFTConfig, OFTModel,
+    PolyConfig, PolyModel,
+    PrefixTuningConfig,
+    PromptEncoderConfig, PromptTuningConfig,
+    VeraConfig, VeraModel,
+    XLoraConfig, XLoraModel,
+)
+from peft.tuners.tuners_utils import BaseTuner as _BaseTuner
+import peft.mapping as mapping
+
+from .lora_ga_utils import (estimate_gradient, LoraGAConfig, find_all_linear_modules,
+                            LoraGAModel, lora_ga_layer_init, update_layer)
+
+PEFT_TYPE_TO_TUNER_MAPPING: dict[str, type[_BaseTuner]] = {
+    "LORA": LoraGAModel, # Use LoraGAModel instead of LoraModel
+    "LOHA": LoHaModel,
+    "LOKR": LoKrModel,
+    "ADALORA": AdaLoraModel,
+    "BOFT": BOFTModel,
+    "IA3": IA3Model,
+    "OFT": OFTModel,
+    "POLY": PolyModel,
+    "LN_TUNING": LNTuningModel,
+    "VERA": VeraModel,
+    "FOURIERFT": FourierFTModel,
+    "XLORA": XLoraModel,
+    "HRA": HRAModel,
+}
 
 
-def lora_ga_init(model,
-                 data_collator,
-                 dataset,
-                 batch_size: int = 2,
-                 num_iters: int = 64,
-                 max_length: int = 1024,
-                 direction: str = "ArB2r",
-                 dtype: str = "fp32",
-                 scale: str = "stable",
-                 stable_gamma: int = 16):
+PEFT_TYPE_TO_CONFIG_MAPPING: dict[str, type[PeftConfig]] = {
+    "LORA": LoraGAConfig, # Use LoraGAConfig instead of LoraConfig
+    "ADAPTION_PROMPT": AdaptionPromptConfig,
+    "PROMPT_TUNING": PromptTuningConfig,
+    "PREFIX_TUNING": PrefixTuningConfig,
+    "P_TUNING": PromptEncoderConfig,
+    "LOHA": LoHaConfig,
+    "LOKR": LoKrConfig,
+    "ADALORA": AdaLoraConfig,
+    "BOFT": BOFTConfig,
+    "IA3": IA3Config,
+    "MULTITASK_PROMPT_TUNING": MultitaskPromptTuningConfig,
+    "OFT": OFTConfig,
+    "POLY": PolyConfig,
+    "LN_TUNING": LNTuningConfig,
+    "VERA": VeraConfig,
+    "FOURIERFT": FourierFTConfig,
+    "XLORA": XLoraConfig,
+    "HRA": HRAConfig,
+}
+
+class LoraGAContext:
+    """
+    Context manager for attaching and detaching a named gradient dictionary to a model.
+
+    This context manager allows you to temporarily attach a dictionary of named gradients
+    to the model as an attribute. Upon entering the context, the `named_grad` dictionary
+    is set as an attribute of the model. Upon exiting the context, the attribute is removed.
+
+    Attributes:
+        model (torch.nn.Module): The model to which the gradient dictionary will be attached.
+        named_grad (dict, optional): A dictionary where keys are parameter names and values are gradients. Defaults to None.
+    """
+
+    def __init__(self,
+        model: torch.nn.Module,
+        named_grad: dict = None,
+    ) -> None:
+        self.model = model
+        self.named_grad = named_grad
+
+    def __enter__(self):
+        setattr(self.model, "named_grad", self.named_grad)
+        mapping.PEFT_TYPE_TO_CONFIG_MAPPING_origin = mapping.PEFT_TYPE_TO_CONFIG_MAPPING
+        mapping.PEFT_TYPE_TO_TUNER_MAPPING_origin = mapping.PEFT_TYPE_TO_TUNER_MAPPING
+        mapping.PEFT_TYPE_TO_CONFIG_MAPPING = PEFT_TYPE_TO_CONFIG_MAPPING
+        mapping.PEFT_TYPE_TO_TUNER_MAPPING = PEFT_TYPE_TO_TUNER_MAPPING
+
+        LoraLayer.updata_layer_origin = LoraLayer.update_layer
+        LoraLayer.update_layer = update_layer
+        LoraLayer.lora_ga_layer_init = lora_ga_layer_init
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if hasattr(self.model, "named_grad"):
+            delattr(self.model, "named_grad")
+        mapping.PEFT_TYPE_TO_CONFIG_MAPPING = mapping.PEFT_TYPE_TO_CONFIG_MAPPING_origin
+        mapping.PEFT_TYPE_TO_TUNER_MAPPING = mapping.PEFT_TYPE_TO_TUNER_MAPPING_origin
+
+        LoraLayer.update_layer = LoraLayer.updata_layer_origin
+
+        del mapping.PEFT_TYPE_TO_CONFIG_MAPPING_origin
+        del mapping.PEFT_TYPE_TO_TUNER_MAPPING_origin
+        del LoraLayer.updata_layer_origin
+
+def get_lora_ga_model(model,
+                      data_collator,
+                      dataset,
+                      batch_size: int = 2,
+                      num_iters: int = 64,
+                      max_length: int = 1024,
+                      direction: str = "ArB2r",
+                      dtype: str = "fp32",
+                      scale: str = "stable",
+                      stable_gamma: int = 16):
 
     peft_config = LoraGAConfig(
         bsz=batch_size,
@@ -72,10 +176,10 @@ if __name__ == "__main__":
     args = arg_parser()
     # Assuming 'model' and 'dataset' are defined elsewhere in your codebase.
     # For demonstration purposes, we'll pass None here.
-    lora_ga_init(None, None,
-                 batch_size=args.batch_size,
-                 num_iters=args.num_iters,
-                 direction=args.direction,
-                 dtype=args.dtype,
-                 scale=args.scale,
-                 stable_gamma=args.stable_gamma)
+    get_lora_ga_model(None, None,
+                      batch_size=args.batch_size,
+                      num_iters=args.num_iters,
+                      direction=args.direction,
+                      dtype=args.dtype,
+                      scale=args.scale,
+                      stable_gamma=args.stable_gamma)
