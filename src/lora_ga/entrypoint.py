@@ -12,6 +12,7 @@ def lora_ga_init(model,
                  dataset,
                  batch_size: int=2,
                  num_iters: int=64,
+                 max_length: int=1024,
                  direction: str="ArB2r",
                  dtype: str="fp32",
                  scale: str="stable",
@@ -19,6 +20,7 @@ def lora_ga_init(model,
     peft_config = LoraGAConfig(
         bsz=batch_size,
         iters=num_iters,
+        max_length=max_length,
         direction=direction,
         dtype=dtype,
         scale=scale,
@@ -30,7 +32,7 @@ def lora_ga_init(model,
         raise ValueError(f"Dataset does not contain enough samples. LoRA-GA requested batch_size * num_iters = {num_samples} samples, but the dataset only has {len(dataset)} samples.")
     dataset = dataset.select(range(num_samples))
     device = model.device
-    dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=lambda x: tokenizer.pad(x, padding='longest', return_tensors='pt').to(device))
+    dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=lambda x: tokenizer.pad(x, padding='longest', return_tensors='pt', max_length=max_length).to(device))
 
     accelerator = Accelerator()
     named_grad = estimate_gradient(
