@@ -6,7 +6,9 @@ from accelerate import Accelerator
 
 from .lora_ga_utils import (estimate_gradient, LoraGAConfig, LoraGAContext, find_all_linear_modules)
 
+
 def lora_ga_init(model,
+                 tokenizer,
                  dataset,
                  batch_size: int=2,
                  num_iters: int=64,
@@ -27,11 +29,9 @@ def lora_ga_init(model,
     if len(dataset) < num_samples:
         raise ValueError(f"Dataset does not contain enough samples. LoRA-GA requested batch_size * num_iters = {num_samples} samples, but the dataset only has {len(dataset)} samples.")
     dataset = dataset.select(range(num_samples))
+    device = model.device
+    dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=lambda x: tokenizer.pad(x, padding='longest', return_tensors='pt').to(device))
 
-    # TODO Padding
-    # dict_keys(['input_ids', 'attention_mask', 'labels'])
-
-    dataloader = DataLoader(dataset, batch_size=batch_size)
     accelerator = Accelerator()
     named_grad = estimate_gradient(
         model=model,
@@ -49,6 +49,7 @@ def lora_ga_init(model,
 def arg_parser():
     parser = argparse.ArgumentParser(description="LoRA GA Initialization")
     parser.add_argument("--model", type=str, default="model", help="Model to be optimized")
+    parser.add_argument("--tokenizer", type=str, default="tokenizer", help="Tokenizer to be used")
     parser.add_argument("--dataset", type=str, default="dataset", help="Dataset to be used")
     # parser.add_argument("--save_dir", type=str, default="save_dir", help="Directory to save the results")
     parser.add_argument("--batch_size", type=int, default=2, help="Batch size for data loader")
@@ -71,6 +72,3 @@ if __name__ == "__main__":
                  dtype=args.dtype,
                  scale=args.scale,
                  stable_gamma=args.stable_gamma)
-
-
-
