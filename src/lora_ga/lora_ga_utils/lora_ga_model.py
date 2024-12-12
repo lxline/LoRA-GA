@@ -147,19 +147,14 @@ def update_layer(
         use_dora: bool = False,
         lora_bias: bool = False,
     ):
-    self.update_layer_origin(
-        adapter_name,
-        r,
-        lora_alpha,
-        lora_dropout,
-        False,
-        use_rslora,
-        use_dora,
-        lora_bias,
-    )
     if isinstance(init_lora_weights, str) and init_lora_weights.lower() == "lora-ga":
+        self.update_layer_origin(adapter_name, r, lora_alpha, lora_dropout,
+                                 False, use_rslora, use_dora, lora_bias)
         with gather_params_ctx(self.get_base_layer().weight):
             self.lora_ga_layer_init(adapter_name)
+    else:
+        self.update_layer_origin(adapter_name, r, lora_alpha, lora_dropout,
+                                 init_lora_weights, use_rslora, use_dora, lora_bias)
 
 
 class LoraGAModel(LoraModel):

@@ -95,7 +95,7 @@ class LoraGAContext:
         mapping.PEFT_TYPE_TO_CONFIG_MAPPING = PEFT_TYPE_TO_CONFIG_MAPPING
         mapping.PEFT_TYPE_TO_TUNER_MAPPING = PEFT_TYPE_TO_TUNER_MAPPING
 
-        LoraLayer.updata_layer_origin = LoraLayer.update_layer
+        LoraLayer.update_layer_origin = LoraLayer.update_layer
         LoraLayer.update_layer = update_layer
         LoraLayer.lora_ga_layer_init = lora_ga_layer_init
 
@@ -109,7 +109,7 @@ class LoraGAContext:
 
         del mapping.PEFT_TYPE_TO_CONFIG_MAPPING_origin
         del mapping.PEFT_TYPE_TO_TUNER_MAPPING_origin
-        del LoraLayer.updata_layer_origin
+        del LoraLayer.update_layer_origin
 
 def get_lora_ga_model(model,
                       data_collator,
