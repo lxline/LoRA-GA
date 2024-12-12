@@ -110,6 +110,7 @@ class LoraGAContext:
         del mapping.PEFT_TYPE_TO_CONFIG_MAPPING_origin
         del mapping.PEFT_TYPE_TO_TUNER_MAPPING_origin
         del LoraLayer.update_layer_origin
+        del LoraLayer.lora_ga_layer_init
 
 def get_lora_ga_model(model,
                       data_collator,
