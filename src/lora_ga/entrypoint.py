@@ -8,15 +8,16 @@ from .lora_ga_utils import (estimate_gradient, LoraGAConfig, LoraGAContext, find
 
 
 def lora_ga_init(model,
-                 tokenizer,
+                 data_collator,
                  dataset,
-                 batch_size: int=2,
-                 num_iters: int=64,
-                 max_length: int=1024,
-                 direction: str="ArB2r",
-                 dtype: str="fp32",
-                 scale: str="stable",
-                 stable_gamma: int=16):
+                 batch_size: int = 2,
+                 num_iters: int = 64,
+                 max_length: int = 1024,
+                 direction: str = "ArB2r",
+                 dtype: str = "fp32",
+                 scale: str = "stable",
+                 stable_gamma: int = 16):
+
     peft_config = LoraGAConfig(
         bsz=batch_size,
         iters=num_iters,
@@ -27,14 +28,17 @@ def lora_ga_init(model,
         stable_gamma=stable_gamma,
         target_modules=find_all_linear_modules(model=model),
     )
+
     num_samples = batch_size * num_iters
     if len(dataset) < num_samples:
-        raise ValueError(f"Dataset does not contain enough samples. LoRA-GA requested batch_size * num_iters = {num_samples} samples, but the dataset only has {len(dataset)} samples.")
+        raise ValueError(
+            f"Dataset does not contain enough samples. LoRA-GA requested batch_size * num_iters = {num_samples} samples, but the dataset only has {len(dataset)} samples.")
     dataset = dataset.select(range(num_samples))
-    device = model.device
-    dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=lambda x: tokenizer.pad(x, padding='longest', return_tensors='pt', max_length=max_length).to(device))
+    dataloader = DataLoader(dataset, batch_size=batch_size, collate_fn=lambda x: data_collator(x))
 
     accelerator = Accelerator()
+
+    model.requires_grad_(True)
     named_grad = estimate_gradient(
         model=model,
         dataloader=dataloader,
@@ -45,6 +49,7 @@ def lora_ga_init(model,
     with LoraGAContext(model=model, named_grad=named_grad):
         model = get_peft_model(model=model, peft_config=peft_config, adapter_name="default")
 
+    model.requires_grad_(False)
     return model
 
 
