@@ -7,13 +7,13 @@ from accelerate import Accelerator
 from .lora_ga_utils import (estimate_gradient, LoraGAConfig, LoraGAContext, find_all_linear_modules)
 
 def lora_ga_init(model,
-         dataset,
-         batch_size: int=2,
-         num_iters: int=64,
-         direction: str="ArB2r",
-         dtype: str="fp32",
-         scale: str="stable",
-         stable_gamma: int=16):
+                 dataset,
+                 batch_size: int=2,
+                 num_iters: int=64,
+                 direction: str="ArB2r",
+                 dtype: str="fp32",
+                 scale: str="stable",
+                 stable_gamma: int=16):
     peft_config = LoraGAConfig(
         bsz=batch_size,
         iters=num_iters,
@@ -23,7 +23,14 @@ def lora_ga_init(model,
         stable_gamma=stable_gamma,
         target_modules=find_all_linear_modules(model=model),
     )
-    dataset = dataset[:batch_size * num_iters]
+    num_samples = batch_size * num_iters
+    if len(dataset) < num_samples:
+        raise ValueError(f"Dataset does not contain enough samples. LoRA-GA requested batch_size * num_iters = {num_samples} samples, but the dataset only has {len(dataset)} samples.")
+    dataset = dataset.select(range(num_samples))
+
+    # TODO Padding
+    # dict_keys(['input_ids', 'attention_mask', 'labels'])
+
     dataloader = DataLoader(dataset, batch_size=batch_size)
     accelerator = Accelerator()
     named_grad = estimate_gradient(
