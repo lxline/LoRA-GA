@@ -98,6 +98,8 @@ def estimate_gradient(
     from .offload_utils_for_quant import show_gpu_and_cpu_memory
     from .offload_utils_for_quant import OffloadContext
 
+    device = model.device
+
     with OffloadContext(
         model=model,
         named_grads=named_grads,
@@ -111,7 +113,7 @@ def estimate_gradient(
             print("before forward===========================================================")
             show_gpu_and_cpu_memory()
             num_batch += 1
-            batch = {k: v for k, v in batch.items()}
+            batch = {k: v.to(device) for k, v in batch.items()}
             outputs = model(**batch)
             show_gpu_and_cpu_memory()
             print("before backward===========================================")
