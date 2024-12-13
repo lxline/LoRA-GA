@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import DataLoader
 from accelerate import Accelerator
 
-from peft import get_peft_model
+from peft import get_peft_model, PeftModel
 from peft.config import PeftConfig
 from peft.tuners.lora import LoraLayer
 from peft.tuners import (
@@ -28,7 +28,7 @@ from peft.tuners.tuners_utils import BaseTuner as _BaseTuner
 import peft.mapping as mapping
 
 from .lora_ga_utils import (estimate_gradient, LoraGAConfig, find_all_linear_modules,
-                            LoraGAModel, lora_ga_layer_init, update_layer)
+                            LoraGAModel, lora_ga_layer_init, update_layer, save_pretrained)
 
 PEFT_TYPE_TO_TUNER_MAPPING: dict[str, type[_BaseTuner]] = {
     "LORA": LoraGAModel, # Use LoraGAModel instead of LoraModel
@@ -96,6 +96,9 @@ class LoraGAContext:
         mapping.PEFT_TYPE_TO_CONFIG_MAPPING = PEFT_TYPE_TO_CONFIG_MAPPING
         mapping.PEFT_TYPE_TO_TUNER_MAPPING = PEFT_TYPE_TO_TUNER_MAPPING
 
+        PeftModel.save_pretrained_origin = PeftModel.save_pretrained
+        PeftModel.save_pretrained = save_pretrained
+
         LoraLayer.update_layer_origin = LoraLayer.update_layer
         LoraLayer.update_layer = update_layer
         LoraLayer.lora_ga_layer_init = lora_ga_layer_init
@@ -106,10 +109,13 @@ class LoraGAContext:
         mapping.PEFT_TYPE_TO_CONFIG_MAPPING = mapping.PEFT_TYPE_TO_CONFIG_MAPPING_origin
         mapping.PEFT_TYPE_TO_TUNER_MAPPING = mapping.PEFT_TYPE_TO_TUNER_MAPPING_origin
 
+        PeftModel.save_pretrained = PeftModel.save_pretrained_origin
+
         LoraLayer.update_layer = LoraLayer.update_layer_origin
 
         del mapping.PEFT_TYPE_TO_CONFIG_MAPPING_origin
         del mapping.PEFT_TYPE_TO_TUNER_MAPPING_origin
+        del PeftModel.save_pretrained_origin
         del LoraLayer.update_layer_origin
         del LoraLayer.lora_ga_layer_init
 

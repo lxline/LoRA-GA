@@ -44,3 +44,8 @@ class LoraGAConfig(LoraConfig):
     def __post_init__(self):
         super().__post_init__()
         self.init_lora_weights = "lora-ga"
+
+    def to_LoraConfig(self):
+        LoraConfig_fields = LoraConfig.__annotations__.keys()
+        LoraConfig_kwargs = {field: getattr(self, field) for field in LoraConfig_fields}
+        return LoraConfig(**LoraConfig_kwargs)
