@@ -157,11 +157,6 @@ def update_layer(
                                  init_lora_weights, use_rslora, use_dora, lora_bias)
 
 
-def save_pretrained(self, **kwargs):
-    self.peft_config = self.peft_config.to_LoraConfig()
-    self.save_pretrained_origin(**kwargs)
-
-
 class LoraGAModel(LoraModel):
     """
     Creates Low Rank Adapter (LoRA) with Gradient Approximation  model (LoRA-GA) from a pretrained transformers model.
