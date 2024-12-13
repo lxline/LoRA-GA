@@ -145,7 +145,6 @@ def get_lora_ga_model(model,
 
     accelerator = Accelerator()
 
-    original_state = {name: param.requires_grad for name, param in model.named_parameters()}
     model.requires_grad_(True)
     named_grad = estimate_gradient(
         model=model,
@@ -157,9 +156,7 @@ def get_lora_ga_model(model,
     with LoraGAContext(model=model, named_grad=named_grad):
         model = get_peft_model(model=model, peft_config=peft_config, adapter_name="default")
 
-    for name, param in model.named_parameters():
-        if name in original_state:
-            param.requires_grad_(original_state[name])
+    model.requires_grad_(False)
     return model
 
 
