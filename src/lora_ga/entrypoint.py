@@ -125,6 +125,7 @@ def get_lora_ga_model(model,
                       stable_gamma: int = 16):
 
     peft_config = LoraGAConfig(
+        task_type='CAUSAL_LM',
         bsz=batch_size,
         iters=num_iters,
         max_length=max_length,
