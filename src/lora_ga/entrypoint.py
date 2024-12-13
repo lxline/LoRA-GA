@@ -89,7 +89,8 @@ class LoraGAContext:
         self.named_grad = named_grad
 
     def __enter__(self):
-        setattr(self.model, "named_grad", self.named_grad)
+        if self.named_grad:
+            setattr(self.model, "named_grad", self.named_grad)
         mapping.PEFT_TYPE_TO_CONFIG_MAPPING_origin = mapping.PEFT_TYPE_TO_CONFIG_MAPPING
         mapping.PEFT_TYPE_TO_TUNER_MAPPING_origin = mapping.PEFT_TYPE_TO_TUNER_MAPPING
         mapping.PEFT_TYPE_TO_CONFIG_MAPPING = PEFT_TYPE_TO_CONFIG_MAPPING
@@ -143,6 +144,7 @@ def get_lora_ga_model(model,
 
     accelerator = Accelerator()
 
+    original_state = {name: param.requires_grad for name, param in model.named_parameters()}
     model.requires_grad_(True)
     named_grad = estimate_gradient(
         model=model,
@@ -154,7 +156,9 @@ def get_lora_ga_model(model,
     with LoraGAContext(model=model, named_grad=named_grad):
         model = get_peft_model(model=model, peft_config=peft_config, adapter_name="default")
 
-    model.requires_grad_(False)
+    for name, param in model.named_parameters():
+        if name in original_state:
+            param.requires_grad_(original_state[name])
     return model
 
 
