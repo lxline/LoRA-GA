@@ -108,6 +108,8 @@ class LoraGAContext:
 
         LoraLayer.update_layer = LoraLayer.update_layer_origin
 
+        self.model.peft_config = self.model.peft_config.to_LoraConfig()
+
         del mapping.PEFT_TYPE_TO_CONFIG_MAPPING_origin
         del mapping.PEFT_TYPE_TO_TUNER_MAPPING_origin
         del LoraLayer.update_layer_origin
