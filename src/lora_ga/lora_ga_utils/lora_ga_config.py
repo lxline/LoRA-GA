@@ -45,6 +45,11 @@ class LoraGAConfig(LoraConfig):
         super().__post_init__()
         self.init_lora_weights = "lora-ga"
 
+    def save_pretrained(self, save_directory: str, **kwargs):
+        if "converted" in save_directory:
+            return  self.to_LoraConfig().save_pretrained(save_directory, **kwargs)
+        return super().save_pretrained(save_directory, **kwargs)
+
     def to_LoraConfig(self):
         LoraConfig_fields = LoraConfig.__annotations__.keys()
         LoraConfig_kwargs = {field: getattr(self, field) for field in LoraConfig_fields}
