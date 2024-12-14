@@ -156,7 +156,6 @@ def get_lora_ga_model(model,
     with LoraGAContext(model=model, named_grad=named_grad):
         model = get_peft_model(model=model, peft_config=peft_config, adapter_name="default")
 
-    model.requires_grad_(False)
     return model
 
 
