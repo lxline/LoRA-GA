@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader
 from accelerate import Accelerator
 
 from peft import get_peft_model, PeftModel
+from peft.utils import PeftType
 from peft.config import PeftConfig
 from peft.tuners.lora import LoraLayer
 from peft.tuners import (
@@ -23,8 +24,16 @@ from peft.tuners import (
     PromptEncoderConfig, PromptTuningConfig,
     VeraConfig, VeraModel,
     XLoraConfig, XLoraModel,
+    AdaptionPromptModel,
+    BoneModel,
+    CPTEmbedding,
+    PrefixEncoder,
+    PromptEmbedding,
+    PromptEncoder,
+    VBLoRAModel,
 )
 from peft.tuners.tuners_utils import BaseTuner as _BaseTuner
+import peft.peft_model as peft_model
 import peft.mapping as mapping
 
 from .lora_ga_utils import (estimate_gradient, LoraGAConfig, find_all_linear_modules,
@@ -46,6 +55,28 @@ PEFT_TYPE_TO_TUNER_MAPPING: dict[str, type[_BaseTuner]] = {
     "HRA": HRAModel,
 }
 
+PEFT_TYPE_TO_MODEL_MAPPING = {
+    PeftType.LORA: LoraGAModel,
+    PeftType.LOHA: LoHaModel,
+    PeftType.LOKR: LoKrModel,
+    PeftType.PROMPT_TUNING: PromptEmbedding,
+    PeftType.P_TUNING: PromptEncoder,
+    PeftType.PREFIX_TUNING: PrefixEncoder,
+    PeftType.ADALORA: AdaLoraModel,
+    PeftType.BOFT: BOFTModel,
+    PeftType.ADAPTION_PROMPT: AdaptionPromptModel,
+    PeftType.IA3: IA3Model,
+    PeftType.OFT: OFTModel,
+    PeftType.POLY: PolyModel,
+    PeftType.LN_TUNING: LNTuningModel,
+    PeftType.VERA: VeraModel,
+    PeftType.FOURIERFT: FourierFTModel,
+    PeftType.XLORA: XLoraModel,
+    PeftType.HRA: HRAModel,
+    PeftType.VBLORA: VBLoRAModel,
+    PeftType.CPT: CPTEmbedding,
+    PeftType.BONE: BoneModel,
+}
 
 PEFT_TYPE_TO_CONFIG_MAPPING: dict[str, type[PeftConfig]] = {
     "LORA": LoraGAConfig, # Use LoraGAConfig instead of LoraConfig
@@ -96,6 +127,9 @@ class LoraGAContext:
         mapping.PEFT_TYPE_TO_CONFIG_MAPPING = PEFT_TYPE_TO_CONFIG_MAPPING
         mapping.PEFT_TYPE_TO_TUNER_MAPPING = PEFT_TYPE_TO_TUNER_MAPPING
 
+        peft_model.PEFT_TYPE_TO_MODEL_MAPPING_origin = peft_model.PEFT_TYPE_TO_MODEL_MAPPING
+        peft_model.PEFT_TYPE_TO_MODEL_MAPPING = PEFT_TYPE_TO_MODEL_MAPPING
+
         LoraLayer.update_layer_origin = LoraLayer.update_layer
         LoraLayer.update_layer = update_layer
         LoraLayer.lora_ga_layer_init = lora_ga_layer_init
@@ -105,11 +139,13 @@ class LoraGAContext:
             delattr(self.model, "named_grad")
         mapping.PEFT_TYPE_TO_CONFIG_MAPPING = mapping.PEFT_TYPE_TO_CONFIG_MAPPING_origin
         mapping.PEFT_TYPE_TO_TUNER_MAPPING = mapping.PEFT_TYPE_TO_TUNER_MAPPING_origin
+        peft_model.PEFT_TYPE_TO_MODEL_MAPPING = peft_model.PEFT_TYPE_TO_MODEL_MAPPING_origin
 
         LoraLayer.update_layer = LoraLayer.update_layer_origin
 
         del mapping.PEFT_TYPE_TO_CONFIG_MAPPING_origin
         del mapping.PEFT_TYPE_TO_TUNER_MAPPING_origin
+        del peft_model.PEFT_TYPE_TO_MODEL_MAPPING_origin
         del LoraLayer.update_layer_origin
         del LoraLayer.lora_ga_layer_init
 
