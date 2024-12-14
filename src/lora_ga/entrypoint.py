@@ -135,7 +135,7 @@ class LoraGAContext:
         LoraLayer.lora_ga_layer_init = lora_ga_layer_init
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if hasattr(self.model, "named_grad"):
+        if self.named_grad and hasattr(self.model, "named_grad"):
             delattr(self.model, "named_grad")
         mapping.PEFT_TYPE_TO_CONFIG_MAPPING = mapping.PEFT_TYPE_TO_CONFIG_MAPPING_origin
         mapping.PEFT_TYPE_TO_TUNER_MAPPING = mapping.PEFT_TYPE_TO_TUNER_MAPPING_origin
