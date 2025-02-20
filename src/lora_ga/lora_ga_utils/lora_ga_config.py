@@ -40,10 +40,12 @@ class LoraGAConfig(LoraConfig):
     stable_gamma: int = field(
         default=16,
     )
+    init_lora_weights: str = field(
+        default = "lora-ga"
+    )
 
     def __post_init__(self):
         super().__post_init__()
-        self.init_lora_weights = "lora-ga"
 
     def save_pretrained(self, save_directory: str, **kwargs):
         if "converted" in save_directory:
